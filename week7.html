@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Animations with localStorage</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #222;
+            color: #f5f5f5;
+        }
+
+        /* Preference controls */
+        .preference-controls {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #eee;
+            border-radius: 8px;
+        }
+
+        body.dark-mode .preference-controls {
+            background-color: #444;
+        }
+
+        /* Animation box styles */
+        .animation-box {
+            width: 200px;
+            height: 200px;
+            background-color: #4285f4;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 8px;
+            margin: 30px auto;
+            cursor: pointer;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        /* Animation classes */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .bounce-animation {
+            animation: bounce 0.8s ease infinite;
+        }
+
+        .spin-animation {
+            animation: spin 1.5s linear infinite;
+        }
+
+        /* Pulse button styles */
+        .pulse-button {
+            padding: 12px 24px;
+            background-color: #34a853;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .pulse-button:hover {
+            background-color: #2d8e47;
+            animation: pulse 1.5s infinite;
+        }
+
+        .pulse-animation {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Animation & Preferences Demo</h1>
+        
+        <div class="preference-controls">
+            <label>
+                <input type="checkbox" id="darkModeToggle"> Dark Mode
+            </label>
+            <label>
+                <input type="checkbox" id="animationToggle"> Enable Animations
+            </label>
+            <button id="resetBtn">Reset Preferences</button>
+        </div>
+        
+        <div class="animation-box" id="animatedBox">
+            Click me to animate!
+        </div>
+        
+        <button class="pulse-button" id="pulseButton">
+            Hover or Click Me
+        </button>
+    </div>
+    
+    <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const animationToggle = document.getElementById('animationToggle');
+            const resetBtn = document.getElementById('resetBtn');
+            const animatedBox = document.getElementById('animatedBox');
+            const pulseButton = document.getElementById('pulseButton');
+
+            // Load preferences from localStorage
+            function loadPreferences() {
+                // Dark mode preference
+                const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
+                darkModeToggle.checked = darkModeEnabled;
+                toggleDarkMode(darkModeEnabled);
+                
+                // Animation preference
+                const animationsEnabled = localStorage.getItem('animations') !== 'false';
+                animationToggle.checked = animationsEnabled;
+                toggleAnimations(animationsEnabled);
+            }
+
+            // Toggle dark mode
+            function toggleDarkMode(enabled) {
+                if (enabled) {
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                }
+                localStorage.setItem('darkMode', enabled);
+            }
+
+            // Toggle animations
+            function toggleAnimations(enabled) {
+                if (!enabled) {
+                    animatedBox.classList.remove('bounce-animation', 'spin-animation');
+                    pulseButton.classList.remove('pulse-animation');
+                }
+                localStorage.setItem('animations', enabled);
+            }
+
+            // Event listeners
+            darkModeToggle.addEventListener('change', (e) => {
+                toggleDarkMode(e.target.checked);
+            });
+
+            animationToggle.addEventListener('change', (e) => {
+                toggleAnimations(e.target.checked);
+            });
+
+            resetBtn.addEventListener('click', () => {
+                localStorage.clear();
+                loadPreferences();
+                alert('Preferences have been reset to defaults!');
+            });
+
+            // Box animation click handler
+            animatedBox.addEventListener('click', () => {
+                if (animationToggle.checked) {
+                    // Remove any existing animation classes
+                    animatedBox.classList.remove('bounce-animation', 'spin-animation');
+                    
+                    // Trigger reflow to restart animation
+                    void animatedBox.offsetWidth;
+                    
+                    // Add random animation
+                    const animations = ['bounce-animation', 'spin-animation'];
+                    const randomAnim = animations[Math.floor(Math.random() * animations.length)];
+                    animatedBox.classList.add(randomAnim);
+                }
+            });
+
+            // Pulse button animation
+            pulseButton.addEventListener('mouseenter', () => {
+                if (animationToggle.checked) {
+                    pulseButton.classList.add('pulse-animation');
+                }
+            });
+
+            pulseButton.addEventListener('mouseleave', () => {
+                pulseButton.classList.remove('pulse-animation');
+            });
+
+            pulseButton.addEventListener('click', () => {
+                if (animationToggle.checked) {
+                    // Briefly intensify the pulse
+                    pulseButton.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        pulseButton.style.transform = '';
+                    }, 300);
+                }
+            });
+
+            // Initialize
+            loadPreferences();
+        });
+    </script>
+</body>
+</html>
